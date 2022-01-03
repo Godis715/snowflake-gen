@@ -15,9 +15,9 @@ Demo with example of snowfake generator usage is available [here](https://godis7
 ## Example
 
 ```js
-import generateSnowflake from "@godis715/snoflake-gen";
+import generateSnowflake from "@godis715/snowflake-gen";
 
 const snowflake = generateSnowflake();
 ```
 
-Result of generator call is an array with type `MultiPolygon` or `[number, number][][][]` (`[number, number]` is 2d-point; array of points is a contour, array of contours is a polygon, where the first contour is considered as outer contour; array of polygons is a multipoygon). 
+Result of generator call is an array with type `MultiPolygon` or `[number, number][][][]` (`[number, number]` is 2d-point; array of points is a contour, array of contours is a polygon, where the first contour is considered as outer contour; array of polygons is a multipolygon). 
