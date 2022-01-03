@@ -15,7 +15,7 @@ Demo with example of snowfake generator usage is available [here](https://godis7
 ## Example
 
 ```js
-import generateSnowflake from "@godis715/snoflake-gen";
+import generateSnowflake from "@godis715/snowflake-gen";
 
 const snowflake = generateSnowflake();
 ```
