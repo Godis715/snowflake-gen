@@ -1,6 +1,6 @@
 {
   "name": "@godis715/snowflake-gen",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "webpack",
     "watch": "webpack --watch"
   },
+  "types": "./dist/src/index.d.ts",
   "author": "Denis Ignatev",
   "email": "godis7.15@gmail.com",
   "url": "https://github.com/Godis715",
