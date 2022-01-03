@@ -1,5 +1,7 @@
+import { Contour } from "../types";
+
 // Taken from https://stackoverflow.com/questions/62323834/calculate-polygon-area-javascript
-export function getOrientedArea(coords) {
+export function getOrientedArea(coords: Contour): number {
     let area = 0;
   
     for (let i = 0; i < coords.length - 1; i++) {

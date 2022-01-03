@@ -1,4 +1,4 @@
-import polygonClipping from "polygon-clipping";
+import * as polygonClipping from "polygon-clipping";
 import {
     rotatePolygon,
     rotateMultiPolygon,
@@ -7,15 +7,16 @@ import {
     movePolygon,
     mapMultiPolygonPoints
 } from "./utils/geomOperations";
-import jDBSCAN from "./deps/jDBScan";
 import { getOrientedArea } from "./utils/getOrientedArea";
-import seedrandom from "seedrandom";
+import { clusterPoints } from "./utils/clusterPoints";
+import * as seedrandom from "seedrandom";
+import { Polygon, Point, MultiPolygon } from "./types";
 
-function randInRange(min, max, rand) {
+function randInRange(min: number, max: number, rand: () => number): number {
     return min + rand() * (max - min);
 }
 
-function getClippingArea() {
+function getClippingArea(): Polygon {
     return [[
         [0, 0],
         [Math.tan(Math.PI / 6), 1],
@@ -24,7 +25,7 @@ function getClippingArea() {
     ]];
 }
 
-function getSquare() {
+function getSquare(): Polygon {
     return [[
         [0, 0],
         [1, 0],
@@ -34,9 +35,17 @@ function getSquare() {
     ]];
 }
 
-function generateRectangle(minWidth, maxWidth, minHeight, maxHeight, minShift, maxShift, rand) {
-    const shift = [randInRange(minShift, maxShift, rand), randInRange(minShift, maxShift, rand)];
-    const scale = [randInRange(minWidth, maxWidth, rand), randInRange(minHeight, maxHeight, rand)];
+function generateRectangle(
+    minWidth: number,
+    maxWidth: number,
+    minHeight: number,
+    maxHeight: number,
+    minShift: number,
+    maxShift: number,
+    rand: () => number
+) {
+    const shift: Point = [randInRange(minShift, maxShift, rand), randInRange(minShift, maxShift, rand)];
+    const scale: Point = [randInRange(minWidth, maxWidth, rand), randInRange(minHeight, maxHeight, rand)];
 
     return movePolygon(
         scalePolygon(
@@ -50,20 +59,20 @@ function generateRectangle(minWidth, maxWidth, minHeight, maxHeight, minShift, m
     );
 }
 
-function clipShapes(shapes) {
+function clipShapes(shapes: Polygon[]): MultiPolygon {
     const clippingArea = getClippingArea();
 
     return polygonClipping.intersection(
         clippingArea,
-        polygonClipping.union(...shapes)
+        polygonClipping.union([], ...shapes)
     );
 }
 
-function hFlipMultiPolygon(multipolygon) {
+function hFlipMultiPolygon(multipolygon: MultiPolygon): MultiPolygon {
     return scaleMultiPolygon(multipolygon, [-1, 1]);
 }
 
-function generateSnowflakeParts(part) {
+function generateSnowflakeParts(part: MultiPolygon): MultiPolygon[] {
     const snowflakeSector = [part, hFlipMultiPolygon(part)];
 
     return Array(6)
@@ -72,29 +81,20 @@ function generateSnowflakeParts(part) {
         .flat();
 }
 
-function getPointHash(point) {
+function getPointHash(point: Point): string {
     return `${point[0]}, ${point[1]}`;
 }
 
-function mergeClosePoints(multipolygons, eps) {
+function mergeClosePoints(multipolygons: MultiPolygon[], eps: number): MultiPolygon[] {
     const points = multipolygons.flat(3);
 
-    const dbscanner = jDBSCAN()
-        .eps(eps)
-        .minPts(1)
-        .distance("EUCLIDEAN")
-        .data(points.map(([x, y]) => ({ x, y })));
-
-    const assignments = dbscanner();
-    const clusterCenters = dbscanner.getClusters().map((c) => [c.x, c.y]);
+    const [assignments, clusterCenters] = clusterPoints(points, eps);
 
     const newPoints = Object.fromEntries(
-        assignments.map((assignment, i) => {
-            const clusterIdx = assignment - 1;
-
+        assignments.map((clusterIdx, pointIdx) => {
             return  [
-                getPointHash(points[i]),
-                clusterIdx === -1 ? points[i] : clusterCenters[clusterIdx]
+                getPointHash(points[pointIdx]),
+                clusterCenters[clusterIdx]
             ];
         })
     );
@@ -107,7 +107,7 @@ function mergeClosePoints(multipolygons, eps) {
     );
 }
 
-function removeSmallContours(polygon, squareEps) {
+function removeSmallContours(polygon: Polygon, squareEps: number): Polygon {
     if (Math.abs(getOrientedArea(polygon[0])) <= squareEps) {
         return [];
     }
@@ -117,13 +117,20 @@ function removeSmallContours(polygon, squareEps) {
     );
 }
 
-function removeSmallPolygons(multipolygon, eps) {
+function removeSmallPolygons(multipolygon: MultiPolygon, eps: number): MultiPolygon {
     return multipolygon
         .map((poly) => removeSmallContours(poly, eps))
-        .filter(Boolean);
+        .filter((poly) => poly.length > 0);
 }
 
-export function generateSnowflake(options = {}) {
+type GeneratorOptions = Partial<{
+    shapesNum: number,
+    minShapeSize: number,
+    maxShapeSize: number,
+    seed: number
+}>;
+
+export function generateSnowflake(options: GeneratorOptions = {}) {
     const {
         shapesNum = 10,
         minShapeSize = 0.05,
@@ -131,12 +138,12 @@ export function generateSnowflake(options = {}) {
         seed = 42
     } = options;
 
-    const rand = seedrandom(seed);
+    const rand = seedrandom(seed.toString());
 
     const generateRect = () => generateRectangle(minShapeSize, maxShapeSize, minShapeSize, maxShapeSize, -0.2, 0.7, rand);
     const generateLine = () => generateRectangle(minShapeSize, minShapeSize, maxShapeSize / 2, maxShapeSize, -0.3, 1, rand);
 
-    const skeleton = rotatePolygon(scalePolygon(getSquare(), [minShapeSize, randInRange(0, 1, rand)]), randInRange(-10, 30, rand));
+    const skeleton = rotatePolygon(scalePolygon(getSquare(), [minShapeSize, randInRange(0, 1, rand)]), randInRange(-10, 0, rand));
 
     const rectangles = Array(shapesNum).fill(0).map(generateRect);
     const lines = Array(shapesNum * 3).fill(0).map(generateLine);
@@ -145,8 +152,8 @@ export function generateSnowflake(options = {}) {
     const snowflakePart = clipShapes(shapes);
     const snowflakeParts = generateSnowflakeParts(snowflakePart);
     const correctedSnowflake = mergeClosePoints(snowflakeParts, 0.0001);
-    const snowflake = polygonClipping.union(...correctedSnowflake);
-    const simplifiedSnowflake = removeSmallPolygons(snowflake, 0.01);
+    const snowflake = polygonClipping.union([], ...correctedSnowflake);
+    const filteredSnoflwake = removeSmallPolygons(snowflake, 0.01);
 
-    return simplifiedSnowflake;
+    return filteredSnoflwake;
 }
