@@ -12,6 +12,10 @@ Demo with example of snowfake generator usage is available [here](https://godis7
 
 ## Installation
 
+```sh
+npm i @godis715/snowflake-gen
+```
+
 ## Example
 
 ```js
