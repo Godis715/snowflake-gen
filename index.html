@@ -1,19 +1,34 @@
-<html>
+<html lang="en">
 
 <head>
     <title>Snowflakes</title>
+    <link rel="stylesheet" href="index.css"></link>
 </head>
 
-<body>
-    <h1>Snowflake generator demo</h1>
-    <div>
-        <svg width="200" height="200" viewBox="-1.5 -1.5 3 3">
-            <g id="snowflake" fill="rgba(80, 180, 240, 0.3)"></g>
-            <g id="snowflake2" fill="rgb(50, 120, 255)"></g>
-        </svg>
-        <button id="gen-btn">Generate</button>
+<body class="page">
+    <div class="page_content-container">
+        <h1 class="page_title">Snowflake generator demo</h1>
+        <p class="page_project-link">Project's source code is available <a class="link" href="https://github.com/Godis715/snowflake-gen">
+            here
+        </a></p>
+        <div class="generator">
+            <div class="generator_viewport">
+                <svg width="300" height="300" viewBox="-1.5 -1.5 3 3">
+                    <g id="snowflake" fill="rgba(80, 180, 240, 0.3)"></g>
+                    <g id="snowflake2" fill="rgb(50, 120, 255)"></g>
+                </svg>
+            </div>
+            <button class="generator_button" id="gen-btn">
+                Generate
+            </button>
+        </div>
+        <div class="page_gap"></div>
+        <footer class="page_footer">
+            <small>&copy; Denis Ignatev 2022. All Rights Reserved.</small>
+        </footer>
     </div>
 </body>
+
 <script src="./dist/index.js"></script>
 <script>
     function drawSvgPolygon(polygon) {
